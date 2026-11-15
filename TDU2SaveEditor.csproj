@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>TDU2SaveEditor</RootNamespace>
+    <AssemblyName>TDU2SaveEditor</AssemblyName>
+    <ApplicationIcon></ApplicationIcon>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="database.json" />
+    <EmbeddedResource Include="database.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Database\houses_database.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

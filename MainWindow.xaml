@@ -1,0 +1,491 @@
+<Window x:Class="TDU2SaveEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TDU2SaveEditor"
+        Title="TDU2 Savegame Editor" Height="820" Width="1320"
+        WindowStartupLocation="CenterScreen" FontFamily="Segoe UI"
+        Background="{StaticResource Bg}" Foreground="{StaticResource Fg}">
+
+    <DockPanel Background="{StaticResource Bg}">
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Datei">
+                <MenuItem Header="Savegame-Ordner öffnen..." Click="OpenFolder_Click"/>
+                <MenuItem Header="DATA-Datei öffnen..." Click="OpenData_Click"/>
+                <Separator/>
+                <MenuItem Header="Speichern" Click="Save_Click"/>
+                <MenuItem Header="Backup anlegen" Click="Backup_Click"/>
+                <Separator/>
+                <MenuItem Header="Beenden" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Sprache" x:Name="MiLanguage">
+                <MenuItem Header="Deutsch" Click="LangDE_Click"/>
+                <MenuItem Header="English" Click="LangEN_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Hilfe" x:Name="MiHelp">
+                <MenuItem Header="�ber..." Click="About_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" Text="Bereit. Bitte ein Savegame laden."/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock x:Name="ProfileStatus" Foreground="{StaticResource FgDim}"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <Grid Margin="6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top bar -->
+            <Border Grid.Row="0" Background="{StaticResource Panel}" BorderBrush="{StaticResource Border}"
+                    BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,6">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Profil:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBox x:Name="ProfileBox" Width="150" VerticalAlignment="Center"/>
+                    <Button Content="Neu laden" Click="ReloadProfile_Click"/>
+                    <Border Width="1" Background="{StaticResource Border}" Margin="8,2"/>
+                    <Button Content="Ordner öffnen..." Click="OpenFolder_Click"/>
+                    <Button Content="Speichern" Style="{StaticResource AccentButton}" Click="Save_Click"/>
+                    <Button Content="Backup" Click="Backup_Click"/>
+                    <TextBlock x:Name="SaveDirText" VerticalAlignment="Center" Margin="10,0,0,0"
+                               Foreground="{StaticResource FgDim}" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="210"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="{StaticResource Panel}" BorderBrush="{StaticResource Border}"
+                        BorderThickness="1" CornerRadius="4" Margin="0,0,6,0" Padding="4">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Bereiche" FontWeight="SemiBold"
+                                   Margin="6,4,6,6"/>
+                        <TextBox DockPanel.Dock="Top" x:Name="TxtNavFilter" Margin="2,0,2,6"
+                                 TextChanged="NavFilter_Changed">
+                            <TextBox.ToolTip>
+                                <ToolTip>
+                                    <TextBlock Text="Bereiche filtern..."/>
+                                </ToolTip>
+                            </TextBox.ToolTip>
+                        </TextBox>
+                        <ListBox x:Name="NavSections" BorderThickness="0" Background="Transparent"
+                                 HorizontalContentAlignment="Stretch"
+                                 SelectionChanged="NavSections_Changed"/>
+                    </DockPanel>
+                </Border>
+
+                <TabControl Grid.Column="1" x:Name="Tabs" SelectionChanged="Tabs_SelectionChanged">
+                    <TabControl.Template>
+                        <ControlTemplate TargetType="TabControl">
+                            <Border Background="{StaticResource Bg}" Padding="0,0,0,0">
+                                <ContentPresenter ContentSource="SelectedContent" Margin="6,2,4,4"/>
+                            </Border>
+                        </ControlTemplate>
+                    </TabControl.Template>
+
+                <!-- ============================ ÜBERSICHT ============================ -->
+                <TabItem Header="Übersicht">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <GroupBox Header="Fahrer / Profil">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" Margin="0,3"/>
+                                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtDriverName" IsReadOnly="True"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Geld ($)" Margin="0,3"/>
+                                    <TextBox Grid.Row="0" Grid.Column="3" x:Name="TxtMoney"/>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Casino-Chips (Cp)" Margin="0,3"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtCoupons"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Kilometerstand" Margin="0,3"/>
+                                    <TextBox Grid.Row="1" Grid.Column="3" x:Name="TxtOdometer"/>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Aktuelles Auto (Index)" Margin="0,3"/>
+                                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtCurrentCar"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Globales Level" Margin="0,3"/>
+                                    <TextBox Grid.Row="2" Grid.Column="3" x:Name="TxtLevel" IsReadOnly="True"/>
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Aktuelles Haus" Margin="0,3"/>
+                                    <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtCurrentHouse" IsReadOnly="True"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="2" Text="Insel" Margin="0,3"/>
+                                    <TextBox Grid.Row="3" Grid.Column="3" x:Name="TxtCurrentIsland" IsReadOnly="True"/>
+                                </Grid>
+                            </GroupBox>
+
+                            <GroupBox Header="Schnellaktionen">
+                                <WrapPanel>
+                                    <Button Content="Fahrer übernehmen" Style="{StaticResource AccentButton}" Click="ApplyDriver_Click"/>
+                                    <Button Content="Max. Geld" Click="MaxMoney_Click"/>
+                                    <Button Content="Max. Casino-Chips" Click="MaxCoupons_Click"/>
+                                    <Button Content="Alle Levels &amp; Ziele maximieren" Click="MaxLevels_Click"/>
+                                    <Button Content="Alle Straßen freischalten" Click="UnlockRoads_Click"/>
+                                    <Button Content="Alle Lizenzen freischalten" Click="UnlockLicenses_Click"/>
+                                    <Button Content="Alle Autos reinigen" Click="CleanCars_Click"/>
+                                </WrapPanel>
+                            </GroupBox>
+
+                            <GroupBox Header="Info">
+                                <TextBlock Style="{StaticResource Hint}"
+                                           Text="Tipp: Der Reiter 'Explorer' zeigt den kompletten entschlüsselten Savegame-Baum. Dort lässt sich jedes einzelne Feld bearbeiten. 'Garage' verwaltet die Fahrzeuge inkl. Löschen."/>
+                            </GroupBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ============================ FAHRER ============================ -->
+                <TabItem Header="Fahrer">
+                    <local:SectionEditor x:Name="SecDriver"/>
+                </TabItem>
+
+                <!-- ============================ GARAGE ============================ -->
+                <TabItem Header="Garage">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,6">
+                            <Button Content="Modell tauschen..." Click="SwapCar_Click"/>
+                            <Button Content="Voll tunen" Click="TuneMax_Click"/>
+                            <Button Content="Auto reinigen" Click="CleanOne_Click"/>
+                            <Border Width="1" Background="{StaticResource Border}" Margin="8,2"/>
+                            <Button Content="Ausgewähltes Auto entfernen" Style="{StaticResource AccentButton}" Click="DeleteCar_Click"/>
+                            <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{StaticResource FgDim}"
+                                       TextWrapping="Wrap" MaxWidth="640"
+                                       Text="Tipp: Zellen direkt bearbeitbar (Doppelklick). „Fahrzeug“ und „Haus“ per Dropdown. Vor dem Speichern wird automatisch ein Backup angelegt."/>
+                        </WrapPanel>
+                        <DataGrid Grid.Row="1" x:Name="DgGarage" SelectionMode="Single" IsReadOnly="False"
+                                  AutoGenerateColumns="False" CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="#" Binding="{Binding Slot}" Width="36" IsReadOnly="True"/>
+                                <DataGridComboBoxColumn x:Name="ColCarName" Header="Fahrzeug" Width="3*"
+                                                        SelectedItemBinding="{Binding CarName, Mode=TwoWay}"/>
+                                <DataGridComboBoxColumn x:Name="ColHouse" Header="Haus" Width="*"
+                                                        SelectedItemBinding="{Binding HouseName, Mode=TwoWay}"/>
+                                <DataGridTextColumn Header="Marke" Binding="{Binding Brand}" Width="110" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Archetype" Binding="{Binding Archetype}" Width="70"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="55"/>
+                                <DataGridTextColumn Header="km-Stand" Binding="{Binding Odometer}" Width="80"/>
+                                <DataGridTextColumn Header="Stufe" Binding="{Binding Stage}" Width="45" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Beschl." Binding="{Binding Acc}" Width="55"/>
+                                <DataGridTextColumn Header="Vmax" Binding="{Binding Top}" Width="55"/>
+                                <DataGridTextColumn Header="Bremsen" Binding="{Binding Brk}" Width="55"/>
+                                <DataGridTextColumn Header="Lack" Binding="{Binding Paint}" Width="50"/>
+                                <DataGridTextColumn Header="Platz" Binding="{Binding IndexInGarage}" Width="50"/>
+                                <DataGridTextColumn Header="VIN" Binding="{Binding Vin}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                    </Grid>
+                </TabItem>
+
+                <!-- ============================ HÄUSER ============================ -->
+                <TabItem Header="Häuser &amp; Wohnung">
+                    <local:SectionEditor x:Name="SecHouse"/>
+                </TabItem>
+
+                <!-- ============================ LEVELS ============================ -->
+                <TabItem Header="Levels &amp; Punkte">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <GroupBox Header="Fähigkeiten (Punkte)">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="150"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Competition" Margin="0,3"/>
+                                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtRacingLevel"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Collection" Margin="0,3"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtCollectionLevel"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Social" Margin="0,3"/>
+                                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtSocialLevel"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Gesamtpunkte" Margin="0,3"/>
+                                    <TextBox Grid.Row="0" Grid.Column="3" x:Name="TxtTotalPoints" IsReadOnly="True"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Gesamtlevel" Margin="0,3"/>
+                                    <TextBox Grid.Row="1" Grid.Column="3" x:Name="TxtLevelCalc" IsReadOnly="True"/>
+                                </Grid>
+                            </GroupBox>
+
+                            <GroupBox Header="Discovery / Cruising (Straßen-Erkundung pro Gebiet)">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="150"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Area_0 (Ibiza 1)" Margin="0,3"/>
+                                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtArea0"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Area_1 (Ibiza 2)" Margin="0,3"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtArea1"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Area_2 (Hawaii 1)" Margin="0,3"/>
+                                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtArea2"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Area_3 (Hawaii 2)" Margin="0,3"/>
+                                    <TextBox Grid.Row="0" Grid.Column="3" x:Name="TxtArea3"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Area_4 (Hawaii 3)" Margin="0,3"/>
+                                    <TextBox Grid.Row="1" Grid.Column="3" x:Name="TxtArea4"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Area_5 (Hawaii 4)" Margin="0,3"/>
+                                    <TextBox Grid.Row="2" Grid.Column="3" x:Name="TxtArea5"/>
+                                </Grid>
+                            </GroupBox>
+
+                            <WrapPanel>
+                                <Button Content="Werte übernehmen" Style="{StaticResource AccentButton}" Click="ApplyLevels_Click"/>
+                                <Button Content="Alle Levels maximieren" Click="MaxLevels_Click"/>
+                                <Button Content="Straßen 100%" Click="UnlockRoads_Click"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ============================ LIZENZEN ============================ -->
+                <TabItem Header="Lizenzen &amp; Cups">
+                    <local:SectionEditor x:Name="SecLicenses"/>
+                </TabItem>
+
+                <!-- ============================ EVENTS ============================ -->
+                <TabItem Header="Events">
+                    <local:SectionEditor x:Name="SecEvents"/>
+                </TabItem>
+
+                <!-- ============================ WRACKS ============================ -->
+                <TabItem Header="Wracks">
+                    <local:SectionEditor x:Name="SecWrecks"/>
+                </TabItem>
+
+                <!-- ============================ FOTOS ============================ -->
+                <TabItem Header="Fotos">
+                    <local:SectionEditor x:Name="SecPhotos"/>
+                </TabItem>
+
+                <!-- ============================ BILDER / GALERIE ============================ -->
+                <TabItem Header="Bilder">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="320"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid Grid.Column="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="Kategorie:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <ComboBox x:Name="CmbAssetCategory" Width="160" SelectionChanged="AssetCategory_Changed"/>
+                            </StackPanel>
+                            <ListBox Grid.Row="1" x:Name="LstAssets" SelectionChanged="AssetList_Changed"/>
+                        </Grid>
+                        <Grid Grid.Column="1" Margin="6,0,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Background="{StaticResource Panel}" BorderBrush="{StaticResource Border}"
+                                    BorderThickness="1" CornerRadius="4" Padding="4">
+                                <Image x:Name="ImgAsset" Stretch="Uniform"/>
+                            </Border>
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,6,0,0">
+                                <TextBlock x:Name="TxtAssetInfo" VerticalAlignment="Center" Margin="0,0,10,0"
+                                           Foreground="{StaticResource FgDim}" TextTrimming="CharacterEllipsis"/>
+                                <Button Content="Exportieren..." Click="ExportAsset_Click"/>
+                                <Button Content="Bild importieren..." Click="ImportAsset_Click" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+
+                <!-- ============================ SPOTS ============================ -->
+                <TabItem Header="Spots &amp; Lesezeichen">
+                    <local:SectionEditor x:Name="SecSpots"/>
+                </TabItem>
+
+                <!-- ============================ FREISCHALTEN ============================ -->
+                <TabItem Header="Freischalten">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <GroupBox Header="Fortschritt freischalten">
+                                <WrapPanel>
+                                    <Button Content="Alle Lizenzen + Tests" Click="UnlockLicenses_Click"/>
+                                    <Button Content="Alle Cups &amp; Meisterschaften" Click="UnlockContests_Click"/>
+                                    <Button Content="Alle Events gewinnen" Click="UnlockEvents_Click"/>
+                                    <Button Content="Alle Wracks einsammeln" Click="UnlockWrecks_Click"/>
+                                    <Button Content="Alle Fotospots" Click="UnlockPhotos_Click"/>
+                                </WrapPanel>
+                            </GroupBox>
+                            <GroupBox Header="Zusammenfassung">
+                                <TextBlock x:Name="TxtProgressSummary" Foreground="{StaticResource Fg}" TextWrapping="Wrap"/>
+                            </GroupBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ============================ STATISTIKEN ============================ -->
+                <TabItem Header="Statistiken">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBox x:Name="TxtStatsFilter" Width="220" TextChanged="StatsFilter_Changed"/>
+                            <TextBlock Text="Filter..." VerticalAlignment="Center" Margin="6,0,0,0" Foreground="{StaticResource FgDim}"/>
+                        </StackPanel>
+                        <DataGrid Grid.Row="1" x:Name="DgStats" IsReadOnly="False"/>
+                    </Grid>
+                </TabItem>
+
+                <!-- ============================ CASINO ============================ -->
+                <TabItem Header="Casino">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <GroupBox Header="Casino-Chips">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Chips (Cp):" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="TxtCasinoPoints" Width="150"/>
+                                    <Button Content="Übernehmen" Style="{StaticResource AccentButton}" Click="ApplyCasino_Click"/>
+                                    <Button Content="Max" Click="MaxCoupons_Click"/>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox Header="Casino-Level">
+                                <StackPanel>
+                                    <TextBlock Text="Setzt alle 4 Casino-Skills auf Maximum (10/10 Casino-Level)." TextWrapping="Wrap" Margin="0,0,0,6" Opacity="0.75"/>
+                                    <Button Content="Casino-Level maximieren" Style="{StaticResource AccentButton}" HorizontalAlignment="Left" Click="MaxCasino_Click"/>
+                                </StackPanel>
+                            </GroupBox>
+                            <local:SectionEditor x:Name="SecCasino"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ============================ AVATAR ============================ -->
+                <TabItem Header="Avatar &amp; Aussehen">
+                    <local:SectionEditor x:Name="SecAvatar"/>
+                </TabItem>
+
+                <!-- ============================ STICKER ============================ -->
+                <TabItem Header="Sticker">
+                    <local:SectionEditor x:Name="SecStickers"/>
+                </TabItem>
+
+                <!-- ============================ CHASE ============================ -->
+                <TabItem Header="Verfolgung (Chase)">
+                    <local:SectionEditor x:Name="SecChase"/>
+                </TabItem>
+
+                <!-- ============================ MY LIFE ============================ -->
+                <TabItem Header="My Life">
+                    <local:SectionEditor x:Name="SecMyLife"/>
+                </TabItem>
+
+                <!-- ============================ HANDY ============================ -->
+                <TabItem Header="Handy &amp; Services">
+                    <local:SectionEditor x:Name="SecPhone"/>
+                </TabItem>
+
+                <!-- ============================ BELOHNUNGEN ============================ -->
+                <TabItem Header="Belohnungen">
+                    <local:SectionEditor x:Name="SecRewards"/>
+                </TabItem>
+
+                <!-- ============================ NEWS & RADIO ============================ -->
+                <TabItem Header="News &amp; Radio">
+                    <local:SectionEditor x:Name="SecNews"/>
+                </TabItem>
+
+                <!-- ============================ SPIELER ============================ -->
+                <TabItem Header="Spieler &amp; Ranking">
+                    <local:SectionEditor x:Name="SecPlayers"/>
+                </TabItem>
+
+                <!-- ============================ SONSTIGES ============================ -->
+                <TabItem Header="Sonstiges">
+                    <local:SectionEditor x:Name="SecMisc"/>
+                </TabItem>
+
+                <!-- ============================ EXPLORER ============================ -->
+                <TabItem Header="Explorer (Alles)">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Datei:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <ComboBox x:Name="CmbFile" Width="120" SelectionChanged="CmbFile_Changed"/>
+                            <Border Width="1" Background="{StaticResource Border}" Margin="8,2"/>
+                            <Button Content="Eintrag hinzufügen" Click="ArrayAdd_Click"/>
+                            <Button Content="Eintrag löschen" Click="ArrayDelete_Click"/>
+                            <TextBlock x:Name="TxtNodePath" VerticalAlignment="Center" Margin="10,0,0,0"
+                                       Foreground="{StaticResource FgDim}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="340"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TreeView Grid.Column="0" x:Name="TreeExplorer" Margin="0,0,6,0"
+                                      SelectedItemChanged="TreeExplorer_Selected"/>
+                            <DataGrid Grid.Column="1" x:Name="DgExplorer" IsReadOnly="False"/>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+
+                <!-- ============================ DATEIEN ============================ -->
+                <TabItem Header="Dateien / Backup">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="320"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ListBox Grid.Column="0" x:Name="LstFiles" Margin="0,0,6,0" SelectionChanged="FileList_Changed"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Style="{StaticResource Header}" Text="Dateidetails"/>
+                            <TextBox x:Name="TxtFileInfo" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                     Height="220" VerticalScrollBarVisibility="Auto"/>
+                            <WrapPanel Margin="0,8,0,0">
+                                <Button Content="Gesamtes Savegame speichern" Style="{StaticResource AccentButton}" Click="Save_Click"/>
+                                <Button Content="Backup anlegen" Click="Backup_Click"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+            </TabControl>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>
